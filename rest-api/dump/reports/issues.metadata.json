@@ -1,1 +1,0 @@
-{ "indexes" : [ { "v" : 1, "key" : { "_id" : 1 }, "name" : "_id_", "ns" : "reports.issues" }, { "v" : 1, "key" : { "reportLoc" : "2dsphere" }, "name" : "reportLoc_2dsphere", "ns" : "reports.issues", "2dsphereIndexVersion" : 2 } ] }

@@ -1,28 +1,31 @@
 import os
+import urllib2
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
 from pymongo import MongoClient
 from flask import make_response
 from bson.json_util import dumps
 
-app = Flask(__name__)
-api = Api(app)
-
-
-
-db = MongoClient()
-reports = db.reports
-issues = reports.issues
-tips = db.tips.tips
-
-
 def toJson(obj, code, headers=None):
     resp = make_response(dumps(obj), code)
     resp.headers.extend(headers or {})
     return resp
 
+app = Flask(__name__)
+api = Api(app)
+
+db = MongoClient()
+if db != None:
+    reports = db.reports
+    issues = reports.issues
+    tips = db.tips.tips
+else:
+    abort(404, message="mongodb is not running")
+
 DEFAULT_REPRESENTATIONS = {'application/json': toJson}
 api.representations = DEFAULT_REPRESENTATIONS
+
+#http://sunnykrgupta.github.io/a-practical-guide-to-geopy.html
 
 class RecycleTips(Resource):
     def get(self):
@@ -30,10 +33,6 @@ class RecycleTips(Resource):
 
 class ProblemReports(Resource):
     def get(self):
-        #resp = []
-        #for rec in issues.find():
-        #    resp.append(rec['reportDate'])
-        #return toJson(resp, 201)
         return toJson(issues.find(), 200)
 
     def post(self):
@@ -54,4 +53,3 @@ api.add_resource(RecycleTips, '/recycleTips')
 
 if __name__ == '__main__':
     app.run(debug=True, host=os.getenv('IP'), port=int(os.getenv('PORT')))
-
