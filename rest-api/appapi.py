@@ -16,8 +16,7 @@ api = Api(app)
 
 db = MongoClient()
 if db != None:
-    reports = db.reports
-    issues = reports.issues
+    issues = db.reports.issues
     tips = db.tips.tips
 else:
     abort(404, message="mongodb is not running")
@@ -25,7 +24,6 @@ else:
 DEFAULT_REPRESENTATIONS = {'application/json': toJson}
 api.representations = DEFAULT_REPRESENTATIONS
 
-#http://sunnykrgupta.github.io/a-practical-guide-to-geopy.html
 
 class RecycleTips(Resource):
     def get(self):
@@ -42,10 +40,16 @@ class ProblemReports(Resource):
         parser.add_argument('reportLon')
         parser.add_argument('reportLat')
         args = parser.parse_args()
+        
         lon = float(args['reportLon'])
         lat = float(args['reportLat'])
-        issue = {'reportDate' : args['reportDate'], 'reportText' : args['reportText'], 'reportLoc' : [ lon, lat ] }
-        reports.issues.insert(issue)
+        
+        #Longitude first, Latitude next as per MongoDb indexing guidelines
+        issue = {'reportDate' : args['reportDate'], 
+                 'reportText' : args['reportText'], 
+                 'reportLoc' : [ lon, lat ] }
+                 
+        issues.insert(issue)
         return 201
 
 api.add_resource(ProblemReports, '/problemReports')
