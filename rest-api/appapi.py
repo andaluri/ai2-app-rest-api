@@ -1,10 +1,12 @@
 import os
-import urllib2
+import urllib3
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
 from pymongo import MongoClient
 from flask import make_response
 from bson.json_util import dumps
+
+urllib3.disable_warnings()
 
 def toJson(obj, code, headers=None):
     resp = make_response(dumps(obj), code)
