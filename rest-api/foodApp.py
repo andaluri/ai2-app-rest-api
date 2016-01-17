@@ -64,34 +64,39 @@ class Match2(Resource):
         id = args['id']
         
         myid = registrations.find_one({"_id":ObjectId(id)})
-        
-        dbptr = ''
-        
-        if source == 'donor':
-            dbptr = patrons
-        else:
-            dbptr = donors
-        
+        print myid
+
         results = []
-        
-        radius = radius / earthRadiusInMiles
-        
-        for doc in registrations.find({ "location" : { "$geoWithin": { "$centerSphere": [ myid['location'], radius ] } } }):
-            print doc
-            print doc['_id']
-            docid = str(ObjectId(doc['_id']))
-            temp = dbptr.find_one({"id":docid})
-            print temp
-            if temp is not None:
-                id = temp['id']
-                food = temp['food']
-                reg = registrations.find_one({"_id":ObjectId(id)})
-                name = reg['name']
-                phone = reg['phone']
-                email = reg['email']
-                address1 = reg['address1']
-                address2 = reg['address2']
-                results.append({'id':id, 'food':food, 'name':name, 'phone':phone, 'email':email, 'address1':address1, 'address2':address2})
+        if myid is not None:
+            dbptr = ''
+            
+            if source == 'donor':
+                dbptr = patrons
+            elif source == 'patron':
+                dbptr = donors
+            elif source == 'volunteer':
+                dbptr = None
+            
+            if dbptr is not None:
+                radius = radius / earthRadiusInMiles
+                srchResults = registrations.find({ "location" : { "$geoWithin": { "$centerSphere": [ myid['location'], radius ] } } })
+                if srchResults is not None:
+                    for doc in srchResults:
+                        print doc
+                        print doc['_id']
+                        docid = str(ObjectId(doc['_id']))
+                        temp = dbptr.find_one({"id":docid})
+                        print temp
+                        if temp is not None:
+                            id = temp['id']
+                            food = temp['food']
+                            reg = registrations.find_one({"_id":ObjectId(id)})
+                            name = reg['name']
+                            phone = reg['phone']
+                            email = reg['email']
+                            address1 = reg['address1']
+                            address2 = reg['address2']
+                            results.append({'id':id, 'food':food, 'name':name, 'phone':phone, 'email':email, 'address1':address1, 'address2':address2})
         
         return results, 201
 
@@ -162,16 +167,18 @@ class Registration(Resource):
         args = parser.parse_args()
         
         geoaddr = geocoder.google(args['address1'] + ' ' + args['address2'])
-        lon = geoaddr.latlng[1]
-        lat = geoaddr.latlng[0]
-        registration = {
-                        'company' : args['company'], 
-                        'name' : args['name'], 
-                        'email' : args['email'], 
-                        'phone' : args['phone'], 
-                        'address1' : args['address1'], 
-                        'address2' : args['address2'],
-                        'location' : [lon, lat] }
+        print geoaddr
+        if geoaddr is not None and geoaddr.latlng is not None and len(geoaddr.latlng) == 2:
+            lon = geoaddr.latlng[1]
+            lat = geoaddr.latlng[0]
+            registration = {
+                            'company' : args['company'], 
+                            'name' : args['name'], 
+                            'email' : args['email'], 
+                            'phone' : args['phone'], 
+                            'address1' : args['address1'], 
+                            'address2' : args['address2'],
+                            'location' : [lon, lat] }
                         
         result = registrations.insert(registration)
         
